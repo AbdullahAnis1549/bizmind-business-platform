@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ArrowDown,
   ArrowRight,
@@ -106,7 +106,16 @@ const roles = [
 ];
 
 const Brand = ({ light = false }) => (
-  <Link to="/" className="inline-flex items-center gap-2.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2">
+  <Link
+    to="/"
+    onClick={(event) => {
+      event.preventDefault();
+      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+      window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }}
+    aria-label="BizMind AI home"
+    className="inline-flex items-center gap-2.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2"
+  >
     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-400 text-white shadow-lg shadow-brand-500/30">
       <Sparkles className="h-5 w-5" aria-hidden="true" />
     </span>
@@ -114,6 +123,27 @@ const Brand = ({ light = false }) => (
       BizMind <span className="text-brand-400">AI</span>
     </span>
   </Link>
+);
+
+const SectionLink = ({ href, children, className = '', onClick }) => (
+  <a
+    href={href}
+    onClick={(event) => {
+      event.preventDefault();
+      const target = document.getElementById(href.slice(1));
+      if (target) {
+        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+        target.scrollIntoView({
+          behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          block: 'start',
+        });
+      }
+      onClick?.();
+    }}
+    className={className}
+  >
+    {children}
+  </a>
 );
 
 const PrimaryLink = ({ to, children, className = '' }) => (
@@ -220,6 +250,11 @@ export const LandingPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dashboardPath = needsOnboarding ? '/onboarding' : '/dashboard';
 
+  useEffect(() => {
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    window.scrollTo(0, 0);
+  }, []);
+
   const closeMenu = () => setIsMenuOpen(false);
   const navLinks = [
     { label: 'Features', href: '#features' },
@@ -234,9 +269,9 @@ export const LandingPage = () => {
           <Brand />
           <div className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
-              <a key={link.href} href={link.href} className="rounded-md text-sm font-medium text-slate-600 transition hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+              <SectionLink key={link.href} href={link.href} className="rounded-md text-sm font-medium text-slate-600 transition hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
                 {link.label}
-              </a>
+              </SectionLink>
             ))}
           </div>
           <div className="hidden items-center gap-3 md:flex">
@@ -268,9 +303,9 @@ export const LandingPage = () => {
           <div id="landing-mobile-menu" className="border-t border-slate-200 bg-white px-4 py-4 shadow-soft md:hidden">
             <div className="mx-auto flex max-w-7xl flex-col gap-1">
               {navLinks.map((link) => (
-                <a key={link.href} href={link.href} onClick={closeMenu} className="rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                <SectionLink key={link.href} href={link.href} onClick={closeMenu} className="rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
                   {link.label}
-                </a>
+                </SectionLink>
               ))}
               <div className="mt-2 flex gap-3 border-t border-slate-100 pt-4">
                 {isAuthenticated ? (
@@ -319,9 +354,9 @@ export const LandingPage = () => {
                   </>
                 )}
               </div>
-              <a href="#features" className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
+              <SectionLink href="#features" className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300">
                 Explore the workspace <ArrowDown className="h-4 w-4" aria-hidden="true" />
-              </a>
+              </SectionLink>
             </div>
             <DashboardPreview />
           </div>
@@ -343,7 +378,7 @@ export const LandingPage = () => {
           </div>
         </section>
 
-        <section id="features" className="scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+        <section id="features" className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-brand-600">One connected workspace</span>
@@ -376,7 +411,7 @@ export const LandingPage = () => {
           </div>
         </section>
 
-        <section id="ai" className="scroll-mt-24 overflow-hidden bg-white py-20 sm:py-24">
+        <section id="ai" className="scroll-mt-16 overflow-hidden bg-white py-20 sm:py-24">
           <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-brand-600">AI grounded in your business</span>
@@ -438,7 +473,7 @@ export const LandingPage = () => {
           </div>
         </section>
 
-        <section id="how-it-works" className="scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+        <section id="how-it-works" className="scroll-mt-16 px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
           <div className="mx-auto max-w-7xl">
             <div className="mx-auto max-w-2xl text-center">
               <span className="text-xs font-bold uppercase tracking-[0.18em] text-brand-600">Getting started</span>
@@ -520,9 +555,9 @@ export const LandingPage = () => {
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Explore</h3>
               <div className="mt-4 flex flex-col items-start gap-3">
                 {navLinks.map((link) => (
-                  <a key={link.href} href={link.href} className="text-sm font-medium text-slate-600 transition hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+                  <SectionLink key={link.href} href={link.href} className="text-sm font-medium text-slate-600 transition hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
                     {link.label}
-                  </a>
+                  </SectionLink>
                 ))}
               </div>
             </div>
