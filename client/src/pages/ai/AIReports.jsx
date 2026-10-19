@@ -13,11 +13,12 @@ import {
   Users,
   AlertTriangle,
   Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { aiService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { Skeleton } from '../../components/common/Skeleton';
 
 export const AIReports = () => {
   const { business } = useAuth();
@@ -26,8 +27,10 @@ export const AIReports = () => {
   const [reportType, setReportType] = useState('Monthly');
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [regenerating, setRegenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [aiStatus, setAiStatus] = useState(null);
+  const [cachedReports, setCachedReports] = useState({});
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -41,27 +44,43 @@ export const AIReports = () => {
     fetchStatus();
   }, []);
 
-  const fetchReport = async (typeToFetch) => {
+  const fetchReport = async (typeToFetch, forceRefresh = false) => {
+    const targetType = typeToFetch || reportType;
+
+    // Instant switch if already cached and not forcing refresh
+    if (!forceRefresh && cachedReports[targetType]) {
+      setReport(cachedReports[targetType]);
+      return;
+    }
+
     try {
-      setLoading(true);
-      const res = await aiService.generateReport(typeToFetch || reportType);
+      if (forceRefresh) setRegenerating(true);
+      else setLoading(true);
+
+      const res = await aiService.generateReport(targetType);
       if (res.success) {
         setReport(res.report);
+        setCachedReports((prev) => ({ ...prev, [targetType]: res.report }));
       }
     } catch (err) {
       toastError(err.message || 'Failed to generate executive report.');
     } finally {
       setLoading(false);
+      setRegenerating(false);
     }
   };
 
   useEffect(() => {
-    fetchReport(reportType);
+    fetchReport(reportType, false);
   }, []);
 
   const handleTypeChange = (newType) => {
     setReportType(newType);
-    fetchReport(newType);
+    fetchReport(newType, false);
+  };
+
+  const handleRegenerate = () => {
+    fetchReport(reportType, true);
   };
 
   const handlePrint = () => {
@@ -123,6 +142,17 @@ ${report.sections.map((s) => `\n## ${s.heading}\n${s.content}`).join('\n')}
 
           <button
             type="button"
+            onClick={handleRegenerate}
+            disabled={loading || regenerating}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-2xs transition disabled:opacity-50"
+            title="Force regenerate fresh AI analysis"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? 'animate-spin text-brand-600' : 'text-slate-500'}`} />
+            <span>{regenerating ? 'Regenerating...' : 'Regenerate AI'}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={handleCopyText}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold shadow-2xs transition"
           >
@@ -150,8 +180,38 @@ ${report.sections.map((s) => `\n## ${s.heading}\n${s.content}`).join('\n')}
       )}
 
       {loading ? (
-        <div className="py-20 flex justify-center">
-          <LoadingSpinner size="lg" text="Synthesizing multi-cohort business report..." />
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-soft p-6 sm:p-10 space-y-8 max-w-4xl mx-auto">
+          {/* Header Skeleton */}
+          <div className="border-b border-slate-200 pb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="space-y-2.5 flex-1">
+              <Skeleton className="h-4 w-36 rounded-md" />
+              <Skeleton className="h-8 w-3/4 rounded-xl" />
+              <Skeleton className="h-3 w-48 rounded-md" />
+            </div>
+            <div className="space-y-1.5 text-right">
+              <Skeleton className="h-3 w-28 rounded-md" />
+              <Skeleton className="h-3.5 w-36 rounded-md" />
+            </div>
+          </div>
+
+          {/* Quick Metrics Bar Skeleton */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+          </div>
+
+          {/* Report Sections Skeleton */}
+          <div className="space-y-6">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="space-y-2.5">
+                <Skeleton className="h-5 w-60 rounded-md" />
+                <Skeleton className="h-4 w-full rounded-md" />
+                <Skeleton className="h-4 w-5/6 rounded-md" />
+              </div>
+            ))}
+          </div>
         </div>
       ) : report ? (
         <div className="printable-area bg-white rounded-3xl border border-slate-200 shadow-soft p-6 sm:p-10 space-y-8 max-w-4xl mx-auto content-fade-in">
