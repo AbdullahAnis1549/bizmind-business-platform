@@ -153,6 +153,19 @@ const callGeminiAPI = async (prompt, systemInstruction, apiKey) => {
   console.log(`[AI Service] Using Gemini model: ${model}`);
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
+  const generationConfig = {
+    temperature: 0.3,
+    maxOutputTokens: 4096,
+  };
+
+  // On Gemini 2.5 models, thinking is enabled by default and consumes maxOutputTokens.
+  // Setting thinkingBudget: 0 disables thinking so all tokens go directly to the answer with sub-second response times.
+  if (model.includes('2.5') || model.includes('thinking')) {
+    generationConfig.thinkingConfig = {
+      thinkingBudget: 0,
+    };
+  }
+
   const payload = {
     contents: [
       {
@@ -160,10 +173,7 @@ const callGeminiAPI = async (prompt, systemInstruction, apiKey) => {
         parts: [{ text: `${systemInstruction}\n\nTask:\n${prompt}` }],
       },
     ],
-    generationConfig: {
-      temperature: 0.3,
-      maxOutputTokens: 1000,
-    },
+    generationConfig,
   };
 
   const response = await fetch(url, {
@@ -182,9 +192,26 @@ const callGeminiAPI = async (prompt, systemInstruction, apiKey) => {
   }
 
   const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
+  const candidate = data?.candidates?.[0];
+
+  if (!candidate) {
     throw new Error('Gemini API returned an empty response.');
+  }
+
+  if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+    console.warn(`[AI Service] Gemini finishReason: ${candidate.finishReason}`);
+  }
+
+  // Concatenate all parts (ignoring internal thinking parts if present)
+  const parts = candidate?.content?.parts || [];
+  const answerParts = parts.filter(p => !p.thought && typeof p.text === 'string');
+  const text = (answerParts.length > 0 ? answerParts : parts)
+    .map(p => p.text || '')
+    .join('')
+    .trim();
+
+  if (!text) {
+    throw new Error('Gemini API returned empty text content.');
   }
 
   return text;
@@ -210,7 +237,7 @@ const callOpenAIAPI = async (prompt, systemInstruction, apiKey) => {
         { role: 'user', content: prompt },
       ],
       temperature: 0.3,
-      max_tokens: 1000,
+      max_tokens: 3000,
     }),
     signal: AbortSignal.timeout(AI_TIMEOUT_MS),
   });
