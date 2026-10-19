@@ -4,6 +4,7 @@ import Sidebar from '../components/common/Sidebar';
 import Navbar from '../components/common/Navbar';
 import { useAuth } from '../context/AuthContext';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import TopProgressBar from '../components/common/TopProgressBar';
 
 export const DashboardLayout = () => {
   const { isAuthenticated, needsOnboarding, loading } = useAuth();
@@ -29,6 +30,9 @@ export const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
+      {/* Top Route Transition Progress Bar */}
+      <TopProgressBar />
+
       {/* Sidebar */}
       <Sidebar
         isOpen={sidebarOpen}

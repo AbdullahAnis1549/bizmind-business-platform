@@ -25,7 +25,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { analyticsService } from '../../services/api';
-import { CardSkeleton, TableSkeleton } from '../../components/common/Skeleton';
+import { AnalyticsSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 
@@ -100,17 +100,9 @@ export const Analytics = () => {
       </div>
 
       {loading ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton />
-            <CardSkeleton />
-          </div>
-          <TableSkeleton rows={4} cols={4} />
-        </div>
+        <AnalyticsSkeleton />
       ) : (
-        <>
+        <div className="space-y-6 content-fade-in">
           {/* Revenue & Growth Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Period Revenue */}
@@ -315,7 +307,7 @@ export const Analytics = () => {
               )}
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

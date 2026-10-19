@@ -32,7 +32,7 @@ import {
 } from 'recharts';
 import { analyticsService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { CardSkeleton } from '../../components/common/Skeleton';
+import { DashboardSkeleton, StaffDashboardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
 
 const COLORS = ['#4f46e5', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
@@ -67,15 +67,7 @@ const StaffDashboard = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
-      </div>
-    );
+    return <StaffDashboardSkeleton />;
   }
 
   if (error) {
@@ -282,20 +274,7 @@ export const Dashboard = () => {
   const cur = business?.currency || 'USD';
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="h-8 w-48 bg-slate-200 animate-pulse rounded-lg" />
-          <div className="h-10 w-32 bg-slate-200 animate-pulse rounded-lg" />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
@@ -318,7 +297,7 @@ export const Dashboard = () => {
   const aiInsight = data?.aiInsight || '';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 content-fade-in">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

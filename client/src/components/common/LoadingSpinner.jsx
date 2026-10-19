@@ -1,19 +1,41 @@
-import React from 'react';
+import React from "react";
+import { Sparkles } from "lucide-react";
 
-export const LoadingSpinner = ({ size = 'md', className = '', text = '' }) => {
+/**
+ * Modern High-End Branded Loading Spinner
+ */
+export const LoadingSpinner = ({ size = "md", className = "", text = "" }) => {
   const sizeMap = {
-    sm: 'w-4 h-4 border-2',
-    md: 'w-6 h-6 border-2',
-    lg: 'w-10 h-10 border-3',
-    xl: 'w-14 h-14 border-4',
+    sm: "w-5 h-5",
+    md: "w-8 h-8",
+    lg: "w-12 h-12",
+    xl: "w-16 h-16",
   };
 
   return (
-    <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
-      <div
-        className={`${sizeMap[size] || sizeMap.md} border-brand-200 border-t-brand-600 rounded-full animate-spin`}
-      />
-      {text && <p className="text-xs font-medium text-slate-500 animate-pulse">{text}</p>}
+    <div className={`flex flex-col items-center justify-center gap-3.5 ${className}`}>
+      <div className="relative flex items-center justify-center">
+        {/* Glowing Ambient Backdrop */}
+        <div className="absolute inset-0 rounded-full bg-brand-500/20 blur-md animate-pulse" />
+
+        {/* Spinning Gradient Track */}
+        <div
+          className={`${sizeMap[size] || sizeMap.md} rounded-full border-2 border-slate-200/80 border-t-brand-600 border-r-indigo-500 animate-spin`}
+        />
+
+        {/* Center Sparkle Accent for large loaders */}
+        {(size === "lg" || size === "xl") && (
+          <div className="absolute inset-0 flex items-center justify-center text-brand-600">
+            <Sparkles className="w-4 h-4 animate-pulse" />
+          </div>
+        )}
+      </div>
+
+      {text && (
+        <p className="text-xs font-semibold text-slate-500 tracking-wide animate-pulse">
+          {text}
+        </p>
+      )}
     </div>
   );
 };
