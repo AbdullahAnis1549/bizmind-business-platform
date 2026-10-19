@@ -1,0 +1,14 @@
+node_modules
+# Environment files and local secrets (keep sanitized .env.example templates)
+.env
+.env.*
+!.env.example
+# Private keys and certificate bundles
+*.key
+*.pem
+*.p12
+*.pfx
+dist
+logs
+*.log
+.DS_Store
