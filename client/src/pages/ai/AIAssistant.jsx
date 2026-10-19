@@ -132,7 +132,7 @@ I have direct access to your live product catalog, orders, revenues, and CRM rec
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Engine: {aiStatus?.provider || 'Rule-based engine'} ({aiStatus?.model || 'Rule-based calculations'})
+              Engine: {aiStatus ? `${aiStatus.provider} (${aiStatus.model})` : 'Connecting to AI Engine...'}
             </p>
           </div>
         </div>
@@ -154,8 +154,8 @@ I have direct access to your live product catalog, orders, revenues, and CRM rec
         </button>
       </div>
 
-      {/* Rule-based Mode Banner */}
-      {(!aiStatus?.hasApiKey || aiStatus?.mode === 'rule_based') && (
+      {/* Rule-based Mode Banner (Only show once aiStatus is loaded AND confirmed in rule_based mode) */}
+      {aiStatus && (!aiStatus.hasApiKey || aiStatus.mode === 'rule_based') && (
         <div className="flex items-center gap-2.5 px-6 py-2.5 bg-amber-50 border-b border-amber-200 text-amber-900 text-xs font-semibold">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
           <span>Rule-based mode: add an AI key to enable the AI assistant</span>

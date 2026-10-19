@@ -107,8 +107,8 @@ export const AIContentGenerator = () => {
         </p>
       </div>
 
-      {/* Rule-based Mode Banner */}
-      {(!aiStatus?.hasApiKey || aiStatus?.mode === 'rule_based') && (
+      {/* Rule-based Mode Banner (Only show once aiStatus is loaded AND confirmed in rule_based mode) */}
+      {aiStatus && (!aiStatus.hasApiKey || aiStatus.mode === 'rule_based') && (
         <div className="flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm font-semibold">
           <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
           <span>Rule-based mode: add an AI key to enable the AI assistant</span>
