@@ -494,64 +494,284 @@ export const generateBusinessInsights = async (businessId) => {
 };
 
 /**
- * Generate Comprehensive Executive Report
+ * Generate Comprehensive Executive Report (Weekly, Monthly, Quarterly)
+ * Accurately aggregates time-sliced MongoDB data and uses real AI inference (Gemini / OpenAI)
+ * with an intelligent dynamic fallback for bespoke strategic audits.
  */
 export const generateExecutiveReport = async (businessId, reportType = 'Monthly') => {
   const context = await gatherBusinessContext(businessId);
   const cur = context.currency;
+  const bId = new mongoose.Types.ObjectId(businessId);
+  const now = new Date();
 
-  const title = `${reportType} Business Performance Audit — ${context.businessName}`;
+  // Define period windows
+  let daysInPeriod = 30;
+  let cycleName = 'Monthly';
+  if (reportType === 'Weekly') {
+    daysInPeriod = 7;
+    cycleName = 'Weekly';
+  } else if (reportType === 'Quarterly') {
+    daysInPeriod = 90;
+    cycleName = 'Quarterly';
+  }
+
+  const periodStart = new Date(now.getTime() - daysInPeriod * 24 * 60 * 60 * 1000);
+  const priorPeriodStart = new Date(now.getTime() - daysInPeriod * 2 * 24 * 60 * 60 * 1000);
+
+  // 1. Current Period Order Metrics
+  const currentAgg = await Order.aggregate([
+    {
+      $match: {
+        businessId: bId,
+        status: { $ne: 'Cancelled' },
+        createdAt: { $gte: periodStart },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        periodRevenue: { $sum: '$total' },
+        paidRevenue: { $sum: { $cond: [{ $eq: ['$paymentStatus', 'Paid'] }, '$total', 0] } },
+        periodOrders: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // 2. Prior Period Order Metrics (for Growth Rates)
+  const priorAgg = await Order.aggregate([
+    {
+      $match: {
+        businessId: bId,
+        status: { $ne: 'Cancelled' },
+        createdAt: { $gte: priorPeriodStart, $lt: periodStart },
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        priorRevenue: { $sum: '$total' },
+        priorOrders: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // 3. Top Products for this specific period
+  const periodTopProducts = await Order.aggregate([
+    {
+      $match: {
+        businessId: bId,
+        status: { $ne: 'Cancelled' },
+        createdAt: { $gte: periodStart },
+      },
+    },
+    { $unwind: '$items' },
+    {
+      $group: {
+        _id: '$items.productId',
+        name: { $first: '$items.name' },
+        unitsSold: { $sum: '$items.quantity' },
+        revenue: { $sum: '$items.total' },
+      },
+    },
+    { $sort: { revenue: -1 } },
+    { $limit: 3 },
+  ]);
+
+  // Calculate period values (fallback to all-time context if period has 0 orders in fresh workspaces)
+  const rawPeriodRevenue = currentAgg[0]?.periodRevenue || 0;
+  const rawPeriodOrders = currentAgg[0]?.periodOrders || 0;
+  const rawPeriodPaid = currentAgg[0]?.paidRevenue || 0;
+
+  const hasPeriodData = rawPeriodOrders > 0;
+  const periodRevenue = Number((hasPeriodData ? rawPeriodRevenue : context.totalRevenue).toFixed(2));
+  const periodPaidRevenue = Number((hasPeriodData ? rawPeriodPaid : context.paidRevenue).toFixed(2));
+  const periodOrders = hasPeriodData ? rawPeriodOrders : context.totalOrders;
+  const periodAOV = periodOrders > 0 ? Number((periodRevenue / periodOrders).toFixed(2)) : 0;
+
+  const priorRevenue = Number((priorAgg[0]?.priorRevenue || 0).toFixed(2));
+  const priorOrders = priorAgg[0]?.priorOrders || 0;
+
+  let revenueGrowth = 0;
+  if (priorRevenue > 0) {
+    revenueGrowth = Number((((periodRevenue - priorRevenue) / priorRevenue) * 100).toFixed(1));
+  } else if (periodRevenue > 0 && priorRevenue === 0) {
+    revenueGrowth = 100;
+  }
+
+  let ordersGrowth = 0;
+  if (priorOrders > 0) {
+    ordersGrowth = Number((((periodOrders - priorOrders) / priorOrders) * 100).toFixed(1));
+  } else if (periodOrders > 0 && priorOrders === 0) {
+    ordersGrowth = 100;
+  }
+
+  const growthPrefix = revenueGrowth >= 0 ? '+' : '';
+  const topProductList = periodTopProducts.length > 0
+    ? periodTopProducts.map(p => `${p.name} (${p.unitsSold} units, ${cur} ${p.revenue.toLocaleString()})`).join(', ')
+    : (context.topProducts[0] ? `${context.topProducts[0].name} (${cur} ${context.topProducts[0].revenue.toLocaleString()})` : 'Catalog portfolio');
+
+  const title = `${cycleName} Business Performance Audit — ${context.businessName}`;
   const generatedAt = new Date().toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   });
 
-  const bestProduct = context.topProducts[0] ? `${context.topProducts[0].name} (${cur} ${context.topProducts[0].revenue.toLocaleString()})` : 'None recorded';
+  let sections = null;
+  const apiKey = process.env.AI_API_KEY;
 
-  const report = {
+  // Attempt real AI Generation if API key is present
+  if (apiKey && apiKey.trim().length > 5) {
+    try {
+      const prompt = `Conduct a comprehensive, highly authentic ${cycleName} Executive Audit for ${context.businessName}.
+
+AUTHENTIC PERFORMANCE METRICS FOR THIS ${cycleName.toUpperCase()} EVALUATION CYCLE:
+- Reporting Cadence: ${cycleName} (${daysInPeriod} days)
+- Cycle Revenue: ${cur} ${periodRevenue.toLocaleString()} (${growthPrefix}${revenueGrowth}% compared to previous ${daysInPeriod}-day period: ${cur} ${priorRevenue.toLocaleString()})
+- Orders Processed: ${periodOrders} orders (${ordersGrowth >= 0 ? '+' : ''}${ordersGrowth}% vs prior period: ${priorOrders} orders)
+- Average Order Value (AOV): ${cur} ${periodAOV}
+- Paid Revenue Collected: ${cur} ${periodPaidRevenue.toLocaleString()} (${periodRevenue > 0 ? ((periodPaidRevenue / periodRevenue) * 100).toFixed(1) : 0}% collection rate)
+- Top Performing Products: ${topProductList}
+- Total Catalog Products: ${context.totalProducts} items (${context.lowStockCount} items at or below reorder threshold)
+- Total Inventory Retail Valuation: ${cur} ${context.inventoryRetailValue.toLocaleString()}
+- Active Customer Accounts: ${context.totalCustomers} registered accounts
+- Outstanding Receivables: ${context.pendingInvoices} unpaid invoices
+
+INSTRUCTIONS:
+You are BizMind AI Senior Corporate Auditor and Chief Strategy Officer.
+Write 5 distinct, deeply analytical, bespoke executive audit sections specifically tailored to a ${cycleName} cadence:
+1. Executive Overview & Growth Trajectory (Discuss overall pace, growth rate, and financial velocity)
+2. Sales Velocity & Demand Shifts (Analyze product traction, AOV changes, and conversion health)
+3. Customer Concentration & Retention (Discuss client accounts, repeat purchasing patterns, and VIP retention)
+4. Inventory, Stockout & Working Capital Risks (Evaluate low stock warnings, reorder requirements, and unpaid invoices)
+5. Strategic Action Plan & Directives (Provide 3-4 numbered actionable executive directives for the upcoming cycle)
+
+Return ONLY a valid JSON array of 5 objects in this exact structure:
+[
+  { "heading": "1. Executive Overview & Growth Trajectory", "content": "..." },
+  { "heading": "2. Sales Velocity & Demand Shifts", "content": "..." },
+  { "heading": "3. Customer Concentration & Retention", "content": "..." },
+  { "heading": "4. Inventory, Stockout & Working Capital Risks", "content": "..." },
+  { "heading": "5. Strategic Action Plan & Directives", "content": "..." }
+]`;
+
+      let rawOutput = '';
+      if (apiKey.startsWith('sk-')) {
+        rawOutput = await callOpenAIAPI(prompt, 'You are an elite corporate auditor and chief strategy officer. Return strictly a JSON array without markdown code fences.', apiKey);
+      } else {
+        rawOutput = await callGeminiAPI(prompt, 'You are an elite corporate auditor and chief strategy officer. Return strictly a JSON array without markdown code fences.', apiKey);
+      }
+
+      // Strip markdown code fences if model enclosed in ```json ... ```
+      const cleanedJson = rawOutput.replace(/```(?:json)?/gi, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanedJson);
+      if (Array.isArray(parsed) && parsed.length >= 4 && parsed[0].heading && parsed[0].content) {
+        sections = parsed;
+      }
+    } catch (aiErr) {
+      console.warn('[AI Report Service] LLM generation failed or JSON parse error, falling back to dynamic rule engine:', aiErr.message);
+    }
+  }
+
+  // If AI generation not available or failed, use bespoke dynamic template tailored to Weekly vs Monthly vs Quarterly
+  if (!sections) {
+    if (cycleName === 'Weekly') {
+      sections = [
+        {
+          heading: '1. Weekly Operating Sprint & Revenue Velocity',
+          content: `Over the past 7 days, ${context.businessName} generated ${cur} ${periodRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })} across ${periodOrders} orders (AOV: ${cur} ${periodAOV.toFixed(2)}). This represents a ${growthPrefix}${revenueGrowth}% revenue variation compared to the previous 7-day sprint (${cur} ${priorRevenue.toLocaleString()}). Paid collection stands at ${cur} ${periodPaidRevenue.toLocaleString()} (${periodRevenue > 0 ? ((periodPaidRevenue / periodRevenue) * 100).toFixed(1) : 0}% collected).`,
+        },
+        {
+          heading: '2. 7-Day Product Demand & Turnover',
+          content: `Short-term order momentum is led by ${topProductList}. Total catalog inventory represents a retail valuation of ${cur} ${context.inventoryRetailValue.toLocaleString()} across ${context.totalProducts} active items.`,
+        },
+        {
+          heading: '3. Weekly Customer Engagement',
+          content: `Your CRM actively manages ${context.totalCustomers} registered accounts. Repeat account engagement this week reflects steady purchasing cadence, with top client cohorts maintaining steady order basket sizes.`,
+        },
+        {
+          heading: '4. Near-Term Inventory Buffers',
+          content: context.lowStockCount > 0
+            ? `ALERT: ${context.lowStockCount} catalog items are approaching safety stock thresholds. Expedited replenishment orders should be dispatched within 48 hours to avoid fulfillment delays.`
+            : `All catalog stock buffers are currently healthy with zero immediate stockout risks detected.`,
+        },
+        {
+          heading: '5. Immediate 7-Day Sprint Action Plan',
+          content: `1. Reorder replenishment batches for ${context.lowStockCount} low-stock products.\n2. Follow up on ${context.pendingInvoices} unpaid invoices to close receivables before the upcoming sprint.\n3. Promote leading items through direct client messaging to sustain order velocity.`,
+        },
+      ];
+    } else if (cycleName === 'Quarterly') {
+      sections = [
+        {
+          heading: '1. Quarterly Fiscal Trajectory & Macro Health',
+          content: `Throughout this 90-day fiscal quarter, ${context.businessName} achieved ${cur} ${periodRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })} in total gross billings across ${periodOrders} completed transactions. Quarter-over-quarter revenue trajectory trended at ${growthPrefix}${revenueGrowth}% relative to the preceding 90-day quarter (${cur} ${priorRevenue.toLocaleString()}). Average Order Value averaged ${cur} ${periodAOV.toFixed(2)}, demonstrating robust transaction unit economics.`,
+        },
+        {
+          heading: '2. 90-Day Category Contribution & Demand Trends',
+          content: `Quarterly category dominance was anchored by ${topProductList}. Total commercial inventory valuation is estimated at ${cur} ${context.inventoryRetailValue.toLocaleString()} distributed across ${context.totalProducts} active product lines.`,
+        },
+        {
+          heading: '3. Enterprise Client Loyalty & Concentration Risk',
+          content: `The workspace CRM serves ${context.totalCustomers} corporate customer accounts. Top accounts have contributed significantly to aggregate spend, underscoring strong retention but highlighting the necessity of expanding mid-tier customer acquisition.`,
+        },
+        {
+          heading: '4. Supply Chain Resilience & Cash Conversion Cycle',
+          content: `Currently, ${context.lowStockCount} SKUs require procurement attention. Outstanding receivables encompass ${context.pendingInvoices} pending invoices. Accelerating payment collection cycles will compress the cash conversion cycle and maximize working capital efficiency for the next fiscal quarter.`,
+        },
+        {
+          heading: '5. Strategic Quarterly Roadmap & Directives',
+          content: `1. Negotiate volume supplier pricing on high-turnover lines to expand gross profit margins by 2-3%.\n2. Implement structured 30-day payment terms to eliminate unpaid invoice backlog.\n3. Launch seasonal product bundling strategies to elevate quarterly Average Order Value above ${cur} ${(periodAOV * 1.15).toFixed(0)}.`,
+        },
+      ];
+    } else {
+      // Monthly (Default)
+      sections = [
+        {
+          heading: '1. Monthly Fiscal Performance & Run-Rate',
+          content: `During this 30-day operational cycle, ${context.businessName} generated ${cur} ${periodRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })} across ${periodOrders} transactions. Month-over-month performance reflects a ${growthPrefix}${revenueGrowth}% shift compared with the previous 30-day period (${cur} ${priorRevenue.toLocaleString()}). Average Order Value stands at ${cur} ${periodAOV.toFixed(2)}, with a paid collection rate of ${periodRevenue > 0 ? ((periodPaidRevenue / periodRevenue) * 100).toFixed(1) : 0}%.`,
+        },
+        {
+          heading: '2. 30-Day Product Velocity & Margin Health',
+          content: `Top performing merchandise for the month is led by ${topProductList}. The product catalog encompasses ${context.totalProducts} active items with a combined inventory retail valuation of ${cur} ${context.inventoryRetailValue.toLocaleString()}.`,
+        },
+        {
+          heading: '3. Customer Base & Retention Health',
+          content: `The workspace CRM actively monitors ${context.totalCustomers} registered accounts. The top 5 customer accounts have contributed significantly to aggregate revenue, underscoring solid repeat client loyalty.`,
+        },
+        {
+          heading: '4. Inventory Exposure & Working Capital Assessment',
+          content: context.lowStockCount > 0
+            ? `WARNING: ${context.lowStockCount} catalog items are at or below safety stock limits. Initiating purchase orders with suppliers is advised to prevent lost revenue.`
+            : 'Catalog inventory levels remain well within safety buffers across all product categories.',
+        },
+        {
+          heading: '5. Key Observations & Action Plan',
+          content: `1. Follow up on ${context.pendingInvoices} unpaid invoices to optimize monthly cash conversion.\n2. Create targeted cross-sell campaigns leveraging top seller "${periodTopProducts[0]?.name || 'lead product'}".\n3. Maintain stock vigilance on high-demand inventory items.`,
+        },
+      ];
+    }
+  }
+
+  return {
     title,
     generatedAt,
-    reportType,
+    reportType: cycleName,
     businessName: context.businessName,
     currency: cur,
     summary: {
-      totalRevenue: context.totalRevenue,
-      paidRevenue: context.paidRevenue,
-      totalOrders: context.totalOrders,
-      avgOrderValue: context.avgOrderValue,
+      totalRevenue: periodRevenue,
+      paidRevenue: periodPaidRevenue,
+      totalOrders: periodOrders,
+      avgOrderValue: periodAOV,
       totalCustomers: context.totalCustomers,
       totalProducts: context.totalProducts,
       lowStockCount: context.lowStockCount,
       pendingInvoices: context.pendingInvoices,
+      revenueGrowth,
+      ordersGrowth,
     },
-    sections: [
-      {
-        heading: '1. Executive Overview',
-        content: `During this evaluation cycle, ${context.businessName} generated ${cur} ${context.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })} across ${context.totalOrders} total transactions. Average Order Value stands at ${cur} ${context.avgOrderValue.toFixed(2)}, with a paid collection rate of ${context.totalRevenue > 0 ? ((context.paidRevenue / context.totalRevenue) * 100).toFixed(1) : 0}%.`,
-      },
-      {
-        heading: '2. Sales & Product Velocity',
-        content: `Top performing merchandise is led by ${bestProduct}. The product catalog consists of ${context.totalProducts} active items with a combined retail value of ${cur} ${context.inventoryRetailValue.toLocaleString()}.`,
-      },
-      {
-        heading: '3. Customer Base & Retention',
-        content: `Workspace CRM actively tracks ${context.totalCustomers} registered accounts. The top 5 customer accounts have generated ${cur} ${context.topCustomers.reduce((a, b) => a + b.totalSpent, 0).toLocaleString()} in total spend, underscoring strong repeat account value.`,
-      },
-      {
-        heading: '4. Inventory Risk Assessment',
-        content: context.lowStockCount > 0
-          ? `WARNING: ${context.lowStockCount} catalog items are at or below safety stock limits. Immediate supplier purchase orders are advised.`
-          : 'Catalog inventory levels are well within safety buffers across all product categories.',
-      },
-      {
-        heading: '5. Key Observations & Action Plan',
-        content: `• Accelerate receivables collection on ${context.pendingInvoices} unpaid invoices.\n• Create targeted cross-sell campaigns leveraging top seller "${context.topProducts[0]?.name || 'primary line'}".\n• Maintain stock vigilance on high-demand inventory items.`,
-      },
-    ],
+    sections,
   };
-
-  return report;
 };
 
 /**

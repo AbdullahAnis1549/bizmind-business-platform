@@ -154,7 +154,7 @@ ${report.sections.map((s) => `\n## ${s.heading}\n${s.content}`).join('\n')}
           <LoadingSpinner size="lg" text="Synthesizing multi-cohort business report..." />
         </div>
       ) : report ? (
-        <div className="printable-area bg-white rounded-3xl border border-slate-200 shadow-soft p-6 sm:p-10 space-y-8 max-w-4xl mx-auto">
+        <div className="printable-area bg-white rounded-3xl border border-slate-200 shadow-soft p-6 sm:p-10 space-y-8 max-w-4xl mx-auto content-fade-in">
           {/* Header */}
           <div className="border-b border-slate-200 pb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
@@ -178,13 +178,24 @@ ${report.sections.map((s) => `\n## ${s.heading}\n${s.content}`).join('\n')}
           {/* Quick Metrics Bar */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
             <div>
-              <span className="text-slate-400 block mb-0.5">Total Revenue</span>
-              <span className="text-base font-extrabold text-slate-900">
-                ${report.summary.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </span>
+              <span className="text-slate-400 block mb-0.5">{reportType} Revenue</span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-base font-extrabold text-slate-900">
+                  {report.currency || '$'} {report.summary.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
+                {report.summary.revenueGrowth !== undefined && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
+                    report.summary.revenueGrowth >= 0
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                  }`}>
+                    {report.summary.revenueGrowth >= 0 ? '+' : ''}{report.summary.revenueGrowth}%
+                  </span>
+                )}
+              </div>
             </div>
             <div>
-              <span className="text-slate-400 block mb-0.5">Orders Processed</span>
+              <span className="text-slate-400 block mb-0.5">{reportType} Orders</span>
               <span className="text-base font-extrabold text-slate-900">
                 {report.summary.totalOrders}
               </span>
@@ -192,7 +203,7 @@ ${report.sections.map((s) => `\n## ${s.heading}\n${s.content}`).join('\n')}
             <div>
               <span className="text-slate-400 block mb-0.5">Average Basket (AOV)</span>
               <span className="text-base font-extrabold text-slate-900">
-                ${report.summary.avgOrderValue.toFixed(2)}
+                {report.currency || '$'} {report.summary.avgOrderValue.toFixed(2)}
               </span>
             </div>
             <div>
