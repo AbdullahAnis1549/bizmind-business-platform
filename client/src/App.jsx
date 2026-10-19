@@ -28,6 +28,7 @@ import NotFound from './pages/NotFound';
 import Unauthorized from './pages/Unauthorized';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import LandingPage from './pages/landing/LandingPage';
 
 // Role Guard Component
 const RoleRoute = ({ allowedRoles, children }) => {
@@ -45,6 +46,8 @@ export const App = () => {
         <NotificationProvider>
           <ToastProvider>
             <Routes>
+              <Route path="/" element={<LandingPage />} />
+
               {/* Auth Routes */}
               <Route element={<AuthLayout />}>
                 <Route path="/login" element={<Login />} />
@@ -62,7 +65,6 @@ export const App = () => {
 
               {/* Protected Workspace Routes */}
               <Route element={<DashboardLayout />}>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/customers" element={<CustomerList />} />
                 <Route path="/products" element={<ProductList />} />

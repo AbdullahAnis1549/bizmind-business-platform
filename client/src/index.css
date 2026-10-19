@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
 @layer base {
   body {
     @apply bg-[#f8fafc] text-[#0f172a] antialiased;
@@ -10,6 +15,32 @@
 
   h1, h2, h3, .font-heading {
     font-family: 'Outfit', 'Inter', sans-serif;
+  }
+}
+
+.landing-enter {
+  animation: landing-enter 650ms ease-out both;
+}
+
+@keyframes landing-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .landing-enter {
+    animation: none;
   }
 }
 
