@@ -119,6 +119,18 @@ const seedDatabase = async () => {
 
     console.log('[Seed] Users created: owner/manager/staff for both @aurahome.com and @bizmind.ai');
 
+    // 3b. Create Platform Super Admin
+    const superAdmin = new User({
+      name: 'Platform Super Admin',
+      email: 'abdullahanis592@gmail.com',
+      password: 'Password123!',
+      role: 'superadmin',
+      status: 'active',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80',
+    });
+    await superAdmin.save();
+    console.log('[Seed] Super Admin user created: abdullahanis592@gmail.com (role: superadmin)');
+
     // 4. Create 22 Realistic Customers
     const customerRawData = [
       { name: 'Elena Rostova', email: 'elena.rostova@nexusgroup.com', phone: '+1 512 839 1022', company: 'Nexus Design Group', address: { street: '1401 Congress Ave', city: 'Austin', state: 'TX', zip: '78701', country: 'USA' }, status: 'active', notes: 'Key enterprise interior design partner.' },
@@ -362,9 +374,10 @@ const seedDatabase = async () => {
     console.log('[Seed] Database seeding completed successfully!');
     console.log('====================================================');
     console.log('BIZMIND AI DEMO CREDENTIALS:');
-    console.log('Owner Account:   owner@bizmind.ai   / Password123!');
-    console.log('Manager Account: manager@bizmind.ai / Password123!');
-    console.log('Staff Account:   staff@bizmind.ai   / Password123!');
+    console.log('Super Admin:     abdullahanis592@gmail.com / Password123!');
+    console.log('Owner Account:   owner@bizmind.ai          / Password123!');
+    console.log('Manager Account: manager@bizmind.ai        / Password123!');
+    console.log('Staff Account:   staff@bizmind.ai          / Password123!');
     console.log('====================================================');
 
     await mongoose.disconnect();

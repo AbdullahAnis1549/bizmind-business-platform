@@ -141,7 +141,7 @@ export const AdminDashboard = () => {
                 {adminUser.name || 'Platform Admin'}
               </div>
               <div className="text-[11px] font-mono text-slate-400">
-                {adminUser.email || 'abdullahanis59@gmail.com'}
+                {adminUser.email || 'abdullahanis592@gmail.com'}
               </div>
             </div>
 
