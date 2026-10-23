@@ -45,8 +45,7 @@ CLIENT_URL=http://localhost:5173
 The server refuses to start without `JWT_SECRET`. For the optional features, also configure:
 
 - `AI_API_KEY` and optionally `AI_MODEL` to enable Gemini or OpenAI-backed AI responses. Without a key, supported AI features use the built-in rule-based mode.
-- `ENABLE_OTP=true`, `SMTP_EMAIL`, and `SMTP_PASSWORD` to enable email OTP for owner login. Owner login does not require OTP by default.
-- `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` to initialize the super-admin account. Super-admin login always uses email OTP, so configure SMTP for it.
+- `ENABLE_OTP=true`, `SMTP_EMAIL`, and `SMTP_PASSWORD` to enable email OTP for logins (super-admin login uses email OTP).
 
 ### 2. (Optional) Load demo data
 

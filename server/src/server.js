@@ -8,13 +8,10 @@ if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
 
 import app from './app.js';
 import { connectDB } from './config/db.js';
-import { initSuperAdmin } from './utils/initSuperAdmin.js';
-
 const PORT = process.env.PORT || 7000;
 
 // Connect to MongoDB then start Express server
-connectDB().then(async () => {
-  await initSuperAdmin();
+connectDB().then(() => {
   app.listen(PORT, () => {
     console.log(`[BizMind AI Server] Running on http://localhost:${PORT}`);
     console.log(`[BizMind AI Server] Environment: ${process.env.NODE_ENV || 'development'}`);
