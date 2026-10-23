@@ -231,14 +231,16 @@ export const Navbar = ({ onToggleSidebar }) => {
               onClick={() => setShowUserMenu((prev) => !prev)}
               className="flex items-center gap-2 p-1.5 pl-2 rounded-xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200"
             >
-              <img
-                src={
-                  user?.avatar ||
-                  `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4f46e5&color=fff&bold=true`
-                }
-                alt={user?.name}
-                className="w-8 h-8 rounded-lg object-cover ring-1 ring-slate-200"
-              />
+              <div className="w-8 h-8 rounded-lg overflow-hidden ring-1 ring-slate-200 shrink-0 bg-slate-100">
+                <img
+                  src={
+                    user?.avatar ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4f46e5&color=fff&bold=true`
+                  }
+                  alt={user?.name}
+                  className="w-full h-full object-cover object-top"
+                />
+              </div>
               <div className="text-left hidden sm:block">
                 <div className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[110px]">
                   {user?.name}
