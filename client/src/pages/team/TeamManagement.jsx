@@ -126,6 +126,8 @@ export const TeamManagement = () => {
   };
 
   const isOwner = currentUser?.role === 'owner' || currentUser?.role === 'superadmin';
+  // Manager can also add/remove team members (staff only)
+  const canManageTeam = isOwner || currentUser?.role === 'manager';
 
   return (
     <div className="space-y-6">
@@ -140,7 +142,7 @@ export const TeamManagement = () => {
           </p>
         </div>
 
-        {isOwner && (
+        {canManageTeam && (
           <button
             onClick={() => setInviteOpen(true)}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 active:bg-brand-800 text-white text-sm font-semibold transition shadow-sm shadow-brand-500/20"
@@ -198,7 +200,7 @@ export const TeamManagement = () => {
                   <th className="py-3.5 px-4">Current Role</th>
                   <th className="py-3.5 px-4">Status</th>
                   <th className="py-3.5 px-4">Joined On</th>
-                  {isOwner && <th className="py-3.5 px-4 text-right">Actions</th>}
+                  {canManageTeam && <th className="py-3.5 px-4 text-right">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -271,9 +273,9 @@ export const TeamManagement = () => {
                         {new Date(m.createdAt).toLocaleDateString()}
                       </td>
 
-                      {isOwner && (
+                      {canManageTeam && (
                         <td className="py-3.5 px-4 text-right">
-                          {!isOwnerMember && (
+                          {!isOwnerMember && !isSelf && (
                             <button
                               onClick={() => {
                                 setMemberToDelete(m);
@@ -341,7 +343,7 @@ export const TeamManagement = () => {
               onChange={(e) => setInviteRole(e.target.value)}
               className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm bg-white"
             >
-              <option value="manager">Manager (CRM, Orders, Analytics, AI)</option>
+              {isOwner && <option value="manager">Manager (CRM, Orders, Analytics, AI)</option>}
               <option value="staff">Staff (Orders, Catalog)</option>
             </select>
           </div>

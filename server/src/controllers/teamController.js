@@ -44,6 +44,14 @@ export const inviteMember = async (req, res, next) => {
       });
     }
 
+    // Managers can only add staff, not other managers
+    if (req.user.role === 'manager' && role === 'manager') {
+      return res.status(403).json({
+        success: false,
+        message: 'Managers can only add staff members. Contact the workspace owner to add a manager.',
+      });
+    }
+
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
       return res.status(400).json({
@@ -160,7 +168,15 @@ export const removeMember = async (req, res, next) => {
     if (member._id.toString() === req.user._id.toString()) {
       return res.status(400).json({
         success: false,
-        message: 'Workspace owner cannot be removed from their own business.',
+        message: 'You cannot remove yourself from the workspace.',
+      });
+    }
+
+    // Managers can only remove staff, not other managers or owners
+    if (req.user.role === 'manager' && member.role !== 'staff') {
+      return res.status(403).json({
+        success: false,
+        message: 'Managers can only remove staff members.',
       });
     }
 

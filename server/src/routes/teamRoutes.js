@@ -14,9 +14,9 @@ const router = express.Router();
 router.use(protect, requireBusiness);
 
 router.get('/', getTeamMembers);
-router.post('/invite', checkRole('owner'), teamMemberValidator, inviteMember);
-router.post('/add', checkRole('owner'), teamMemberValidator, inviteMember);
+router.post('/invite', checkRole('owner', 'manager'), teamMemberValidator, inviteMember);
+router.post('/add', checkRole('owner', 'manager'), teamMemberValidator, inviteMember);
 router.put('/:id/role', checkRole('owner'), updateMemberRole);
-router.delete('/:id', checkRole('owner'), removeMember);
+router.delete('/:id', checkRole('owner', 'manager'), removeMember);
 
 export default router;
