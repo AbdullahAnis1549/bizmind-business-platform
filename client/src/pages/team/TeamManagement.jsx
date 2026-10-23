@@ -212,14 +212,14 @@ export const TeamManagement = () => {
                     <tr key={m._id} className="hover:bg-slate-50/75 transition">
                       <td className="py-3.5 px-4 sm:px-6">
                         <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl overflow-hidden ring-1 ring-slate-200 shrink-0 bg-slate-100">
+                        <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 shrink-0 bg-slate-100">
                           <img
                             src={
                               m.avatar ||
                               `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=4f46e5&color=fff&bold=true`
                             }
                             alt={m.name}
-                            className="w-full h-full object-cover object-top"
+                            className="w-full h-full object-cover object-center"
                           />
                         </div>
                           <div>

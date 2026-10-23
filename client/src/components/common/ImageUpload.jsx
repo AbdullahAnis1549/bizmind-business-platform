@@ -13,7 +13,41 @@ export const ImageUpload = ({
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
-  const handleFile = (file) => {
+  // Resize and compress image using canvas before converting to base64
+  const resizeImage = (file, maxDimension = 512, quality = 0.85) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Scale down to maxDimension while keeping aspect ratio
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const resizedBase64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(resizedBase64);
+      };
+      img.onerror = () => reject(new Error('Failed to load image for resizing.'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleFile = async (file) => {
     setError('');
     if (!file) return;
 
@@ -29,15 +63,12 @@ export const ImageUpload = ({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const base64 = e.target.result;
-      onChange(base64);
-    };
-    reader.onerror = () => {
-      setError('Failed to read file. Please try again.');
-    };
-    reader.readAsDataURL(file);
+    try {
+      const resizedBase64 = await resizeImage(file);
+      onChange(resizedBase64);
+    } catch (err) {
+      setError('Failed to process image. Please try again.');
+    }
   };
 
   const handleDrag = (e) => {
