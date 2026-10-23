@@ -35,9 +35,6 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
         {
           folder,
           resource_type: 'image',
-          transformation: [
-            { width: 800, height: 800, crop: 'limit', quality: 'auto:good' },
-          ],
         },
         (error, result) => {
           if (error) reject(error);

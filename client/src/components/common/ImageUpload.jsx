@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon, Link as LinkIcon, Loader2, CheckCircle2 } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Link as LinkIcon, Loader2, CheckCircle2, ExternalLink } from 'lucide-react';
 import { uploadService } from '../../services/api';
 
 export const ImageUpload = ({
@@ -128,7 +128,7 @@ export const ImageUpload = ({
             <p className="text-[11px] text-slate-400 font-mono truncate max-w-xs mt-0.5">
               {value}
             </p>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-3 mt-1">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -137,6 +137,16 @@ export const ImageUpload = ({
               >
                 Change Image
               </button>
+              <a
+                href={value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-medium text-slate-500 hover:text-slate-800 inline-flex items-center gap-1"
+                title="View full resolution image"
+              >
+                View Original
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           </div>
           <button
