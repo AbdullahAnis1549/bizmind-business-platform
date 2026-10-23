@@ -64,6 +64,17 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
+// Root Route (for browser check & ping)
+app.get('/', (req, res) => {
+  res.json({
+    status: 'ok',
+    app: 'BizMind AI API',
+    message: 'Backend server is running successfully.',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({
