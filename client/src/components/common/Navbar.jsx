@@ -231,16 +231,28 @@ export const Navbar = ({ onToggleSidebar }) => {
               onClick={() => setShowUserMenu((prev) => !prev)}
               className="flex items-center gap-2 p-1.5 pl-2 rounded-xl hover:bg-slate-100 transition border border-transparent hover:border-slate-200"
             >
-              <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 shrink-0 bg-slate-100">
-                <img
-                  src={
-                    user?.avatar ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&background=4f46e5&color=fff&bold=true`
-                  }
-                  alt={user?.name}
-                  className="w-full h-full object-cover object-center"
-                />
+              <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 shrink-0 bg-slate-100 flex items-center justify-center">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user?.name || 'User'}
+                    className="w-full h-full object-cover object-center"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      if (e.currentTarget.nextSibling) {
+                        e.currentTarget.nextSibling.style.display = 'flex';
+                      }
+                    }}
+                  />
+                ) : null}
+                <div
+                  className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center uppercase"
+                  style={{ display: user?.avatar ? 'none' : 'flex' }}
+                >
+                  {user?.name ? user.name.charAt(0) : 'U'}
+                </div>
               </div>
+
               <div className="text-left hidden sm:block">
                 <div className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[110px]">
                   {user?.name}

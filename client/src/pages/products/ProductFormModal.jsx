@@ -189,7 +189,9 @@ export const ProductFormModal = ({ isOpen, onClose, product, onSuccess }) => {
           value={watch('image') || ''}
           onChange={(val) => setValue('image', val, { shouldDirty: true })}
           aspectRatio="wide"
+          folder="bizmind/products"
         />
+
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">Product Description</label>

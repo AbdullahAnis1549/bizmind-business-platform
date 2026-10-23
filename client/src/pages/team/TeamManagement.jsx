@@ -212,16 +212,28 @@ export const TeamManagement = () => {
                     <tr key={m._id} className="hover:bg-slate-50/75 transition">
                       <td className="py-3.5 px-4 sm:px-6">
                         <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 shrink-0 bg-slate-100">
-                          <img
-                            src={
-                              m.avatar ||
-                              `https://ui-avatars.com/api/?name=${encodeURIComponent(m.name)}&background=4f46e5&color=fff&bold=true`
-                            }
-                            alt={m.name}
-                            className="w-full h-full object-cover object-center"
-                          />
+                        <div className="w-9 h-9 rounded-full overflow-hidden ring-2 ring-slate-200 shrink-0 bg-slate-100 flex items-center justify-center">
+                          {m.avatar ? (
+                            <img
+                              src={m.avatar}
+                              alt={m.name}
+                              className="w-full h-full object-cover object-center"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                if (e.currentTarget.nextSibling) {
+                                  e.currentTarget.nextSibling.style.display = 'flex';
+                                }
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className="w-full h-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-bold text-xs flex items-center justify-center uppercase"
+                            style={{ display: m.avatar ? 'none' : 'flex' }}
+                          >
+                            {m.name ? m.name.charAt(0) : 'U'}
+                          </div>
                         </div>
+
                           <div>
                             <div className="font-bold text-slate-900 flex items-center gap-2">
                               <span>{m.name}</span>

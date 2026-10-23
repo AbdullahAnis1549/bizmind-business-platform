@@ -144,4 +144,19 @@ export const adminService = {
   updateWorkspaceStatus: (id, status) => api.put(`/admin/workspaces/${id}/status`, { status }),
 };
 
+// Image Upload Service (Cloudinary & Local Fallback)
+export const uploadService = {
+  uploadImage: (file, folder = 'bizmind/avatars') => {
+    const formData = new FormData();
+    formData.append('image', file);
+    return api.post(`/upload?folder=${encodeURIComponent(folder)}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  },
+};
+
 export default api;
+
+

@@ -3,6 +3,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/authRoutes.js';
 import businessRoutes from './routes/businessRoutes.js';
@@ -16,10 +18,14 @@ import teamRoutes from './routes/teamRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import uploadRoutes from './routes/uploadRoutes.js';
 
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 // Behind Render/Railway/Vercel proxies: use the real client IP (needed for correct rate limiting).
 app.set('trust proxy', 1);
@@ -51,6 +57,9 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Static uploads directory
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
@@ -78,6 +87,7 @@ app.use('/api/team', teamRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Error Handling
 app.use(notFound);

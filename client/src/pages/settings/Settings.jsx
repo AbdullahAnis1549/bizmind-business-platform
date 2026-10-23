@@ -213,7 +213,9 @@ export const Settings = () => {
               label="Avatar Image"
               value={watchProfile('avatar') || ''}
               onChange={(val) => setProfileValue('avatar', val, { shouldDirty: true })}
+              folder="bizmind/avatars"
             />
+
 
             <div className="pt-2">
               <button

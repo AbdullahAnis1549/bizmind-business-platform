@@ -240,14 +240,29 @@ export const ProductList = () => {
                     <tr key={p._id} className="hover:bg-slate-50/75 transition group">
                       <td className="py-3.5 px-4 sm:px-6">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={
-                              p.image ||
-                              'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=100&auto=format&fit=crop&q=60'
-                            }
-                            alt={p.name}
-                            className="w-10 h-10 rounded-xl object-cover border border-slate-200/80 shrink-0"
-                          />
+                          <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-200/80 shrink-0 bg-slate-50 flex items-center justify-center">
+                            {p.image ? (
+                              <img
+                                src={p.image}
+                                alt={p.name}
+                                className="w-full h-full object-cover object-center"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  if (e.currentTarget.nextSibling) {
+                                    e.currentTarget.nextSibling.style.display = 'flex';
+                                  }
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className="w-full h-full flex flex-col items-center justify-center text-slate-400"
+                              style={{ display: p.image ? 'none' : 'flex' }}
+                              title="No image"
+                            >
+                              <Package className="w-4 h-4 text-slate-400" />
+                            </div>
+                          </div>
+
                           <div>
                             <div className="font-semibold text-slate-900 group-hover:text-brand-600 transition">
                               {p.name}
