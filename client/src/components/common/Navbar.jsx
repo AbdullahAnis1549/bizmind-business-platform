@@ -15,6 +15,7 @@ import {
   DollarSign,
   AlertTriangle,
   Info,
+  Shield,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
@@ -77,6 +78,7 @@ export const Navbar = ({ onToggleSidebar }) => {
   };
 
   const roleBadgeColor = {
+    superadmin: 'bg-purple-50 text-purple-700 border-purple-200',
     owner: 'bg-brand-50 text-brand-700 border-brand-200',
     manager: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     staff: 'bg-slate-100 text-slate-700 border-slate-200',
@@ -279,6 +281,16 @@ export const Navbar = ({ onToggleSidebar }) => {
                     >
                       <Sparkles className="w-4 h-4 text-brand-600" />
                       <span>AI Assistant</span>
+                    </Link>
+                  )}
+                  {user?.role === 'superadmin' && (
+                    <Link
+                      to="/admin/dashboard"
+                      onClick={() => setShowUserMenu(false)}
+                      className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-purple-700 hover:bg-purple-50 transition"
+                    >
+                      <Shield className="w-4 h-4 text-purple-600" />
+                      <span>Master Platform Admin</span>
                     </Link>
                   )}
                 </div>

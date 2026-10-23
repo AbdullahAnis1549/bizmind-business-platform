@@ -93,8 +93,7 @@ export const login = async (req, res, next) => {
     }
 
     const user = await User.findOne({ email: email.toLowerCase() }).populate('businessId');
-    // Super admins must sign in through /api/admin/login (mandatory 2FA); never here.
-    if (!user || user.role === 'superadmin') {
+    if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password.',

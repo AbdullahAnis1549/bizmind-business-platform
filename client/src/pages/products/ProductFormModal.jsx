@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import Modal from '../../components/common/Modal';
 import { productService } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import ImageUpload from '../../components/common/ImageUpload';
 
 export const ProductFormModal = ({ isOpen, onClose, product, onSuccess }) => {
   const { success: toastSuccess, error: toastError } = useToast();
@@ -12,6 +13,8 @@ export const ProductFormModal = ({ isOpen, onClose, product, onSuccess }) => {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     defaultValues: {
@@ -181,15 +184,12 @@ export const ProductFormModal = ({ isOpen, onClose, product, onSuccess }) => {
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">Image URL</label>
-          <input
-            type="url"
-            {...register('image')}
-            placeholder="https://images.unsplash.com/..."
-            className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
-          />
-        </div>
+        <ImageUpload
+          label="Product Image"
+          value={watch('image') || ''}
+          onChange={(val) => setValue('image', val, { shouldDirty: true })}
+          aspectRatio="wide"
+        />
 
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1">Product Description</label>

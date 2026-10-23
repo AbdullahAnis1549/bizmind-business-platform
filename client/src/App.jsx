@@ -33,7 +33,7 @@ import LandingPage from './pages/landing/LandingPage';
 // Role Guard Component
 const RoleRoute = ({ allowedRoles, children }) => {
   const { user } = useAuth();
-  if (!user || !allowedRoles.includes(user.role)) {
+  if (!user || (!allowedRoles.includes(user.role) && user.role !== 'superadmin')) {
     return <Navigate to="/unauthorized" replace />;
   }
   return children;

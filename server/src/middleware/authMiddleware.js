@@ -34,8 +34,8 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    // Enforce workspace suspension (set by the super admin panel)
-    if (user.businessId) {
+    // Enforce workspace suspension (super admins are never blocked by workspace suspension)
+    if (user.role !== 'superadmin' && user.businessId) {
       const business = await Business.findById(user.businessId).select('status').lean();
       if (business && business.status === 'suspended') {
         return res.status(403).json({
@@ -60,7 +60,7 @@ export const protect = async (req, res, next) => {
 
 export const checkRole = (...roles) => {
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user || (!roles.includes(req.user.role) && req.user.role !== 'superadmin')) {
       return res.status(403).json({
         success: false,
         message: `Forbidden: Access requires one of the following roles: [${roles.join(', ')}]`,

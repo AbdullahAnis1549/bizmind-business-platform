@@ -97,7 +97,7 @@ export const CustomerList = () => {
     }
   };
 
-  const canManage = user?.role === 'owner' || user?.role === 'manager';
+  const canManage = user?.role === 'owner' || user?.role === 'manager' || user?.role === 'superadmin';
 
   return (
     <div className="space-y-6">

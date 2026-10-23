@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { authService, businessService, aiService } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import ImageUpload from '../../components/common/ImageUpload';
 
 export const Settings = () => {
   const { user, business, refreshUser, updateBusinessState } = useAuth();
@@ -31,6 +32,8 @@ export const Settings = () => {
     register: regProfile,
     handleSubmit: handleProfileSubmit,
     reset: resetProfile,
+    watch: watchProfile,
+    setValue: setProfileValue,
   } = useForm({
     defaultValues: {
       name: user?.name || '',
@@ -142,7 +145,7 @@ export const Settings = () => {
     }
   };
 
-  const isOwner = user?.role === 'owner';
+  const isOwner = user?.role === 'owner' || user?.role === 'superadmin';
 
   return (
     <div className="space-y-6">
@@ -206,15 +209,11 @@ export const Settings = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Avatar Image URL</label>
-              <input
-                type="url"
-                {...regProfile('avatar')}
-                placeholder="https://images.unsplash.com/..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              />
-            </div>
+            <ImageUpload
+              label="Avatar Image"
+              value={watchProfile('avatar') || ''}
+              onChange={(val) => setProfileValue('avatar', val, { shouldDirty: true })}
+            />
 
             <div className="pt-2">
               <button

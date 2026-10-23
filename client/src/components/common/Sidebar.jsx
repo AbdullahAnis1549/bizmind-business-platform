@@ -59,6 +59,7 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
       items: [
         { name: 'Team Members', path: '/team', icon: UserCheck, roles: ['owner', 'manager'] },
         { name: 'Settings', path: '/settings', icon: Settings },
+        { name: 'Master Admin', path: '/admin/dashboard', icon: Shield, badge: 'Platform', roles: ['superadmin'] },
       ],
     },
   ];
@@ -111,7 +112,7 @@ export const Sidebar = ({ isOpen, onClose, isCollapsed, onToggleCollapse }) => {
           {navigationSections.map((section, idx) => {
             // Filter section items by user role
             const visibleItems = section.items.filter(
-              (item) => !item.roles || item.roles.includes(user?.role)
+              (item) => !item.roles || item.roles.includes(user?.role) || user?.role === 'superadmin'
             );
 
             if (visibleItems.length === 0) return null;
